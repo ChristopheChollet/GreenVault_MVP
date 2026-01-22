@@ -27,11 +27,15 @@ Vault DeFi **simple et fiable** (MVP) permettant de déposer des **USDC (Sepolia
 
 Dashboard:
 
-![GreenVault Dashboard](docs/screenshots/dashboard.png)
+![GreenVault Dashboard](docs/screenshots/dashboard.webp)
 
 Vault:
 
-![GreenVault Vault](docs/screenshots/vault.png)
+![GreenVault Vault](docs/screenshots/vault.webp)
+
+Impact:
+
+![GreenVault Vault](docs/screenshots/impact.webp)
 
 ---
 

@@ -8,6 +8,7 @@ import { getVaultAddress, isSupportedChainId } from "@/constants/addresses";
 import { useEffect, useMemo, useState } from "react";
 import { formatUnits } from "viem";
 import { ExplorerAddress } from "@/components/ExplorerAddress";
+import { ImpactFeesChart } from "@/components/ImpactFeesChart";
 
 type VaultEvent = {
   chainId: number;
@@ -27,6 +28,13 @@ function formatUsdc(valueWei: bigint, decimals = 4) {
 export default function ImpactPage() {
   const chainId = useChainId();
   const vaultAddress = getVaultAddress(chainId);
+
+  const github = {
+    greenVault: "https://github.com/ChristopheChollet/GreenVault_MVP",
+    dao: "https://github.com/ChristopheChollet/energy-governance-dao",
+    recs: "https://github.com/ChristopheChollet/green-recs-registry",
+    grid: "https://github.com/ChristopheChollet/grid-flex-market",
+  } as const;
 
   const [events, setEvents] = useState<VaultEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,6 +58,36 @@ export default function ImpactPage() {
       if (sharesGross > usdcNet) sum += sharesGross - usdcNet;
     }
     return sum;
+  }, [events]);
+
+  const chartPoints = useMemo(() => {
+    // Build a tiny cumulative series sorted by block number.
+    const withdraws = events
+      .filter((e) => e.eventName === "Withdrawn")
+      .map((e) => ({
+        block: Number(e.blockNumber ?? "0"),
+        shares: e.args.shares ? BigInt(e.args.shares) : undefined,
+        net: e.args.usdcAmount ? BigInt(e.args.usdcAmount) : undefined,
+      }))
+      .filter((w) => w.shares !== undefined && w.net !== undefined)
+      .sort((a, b) => a.block - b.block);
+
+    let cum = BigInt(0);
+    const pts: { label: string; cumulativeFeeUsdc: number }[] = [];
+    for (const w of withdraws) {
+      const shares = w.shares as bigint;
+      const net = w.net as bigint;
+      if (shares > net) cum += shares - net;
+      // label with block suffix to avoid huge numbers in the UI
+      const label = w.block ? `…${String(w.block).slice(-5)}` : "—";
+      const feeUsdc = Number(formatUnits(cum, 6));
+      pts.push({ label, cumulativeFeeUsdc: feeUsdc });
+    }
+
+    // Keep chart readable
+    if (pts.length <= 24) return pts;
+    const step = Math.ceil(pts.length / 24);
+    return pts.filter((_, i) => i % step === 0 || i === pts.length - 1);
   }, [events]);
 
   async function fetchEvents() {
@@ -149,22 +187,60 @@ export default function ImpactPage() {
           </div>
         )}
 
+        {vaultAddress && (
+          <div className="p-4 space-y-3 card">
+            <div className="flex gap-3 justify-between items-baseline">
+              <h3 className="font-semibold">Fees (graph)</h3>
+              <p className="text-xs text-gray-500">Cumul des fees (Withdrawn) vs blocks</p>
+            </div>
+            {chartPoints.length < 2 ? (
+              <p className="text-sm text-gray-400">Pas assez de données pour tracer un graphique (fais un withdraw).</p>
+            ) : (
+              <ImpactFeesChart points={chartPoints} />
+            )}
+          </div>
+        )}
+
         <div className="p-4 space-y-3 card">
           <h3 className="font-semibold">Intégrations (sans doublon)</h3>
-          <ul className="space-y-1 text-sm text-gray-300">
+          <ul className="space-y-2 text-sm text-gray-300">
             <li>
-              <span className="text-gray-200">energy-governance-dao</span>: la DAO gouverne la treasury (fees, paramètres,
-              destination).
+              <a className="text-blue-400 hover:underline" href={github.dao} target="_blank" rel="noreferrer">
+                energy-governance-dao
+              </a>{" "}
+              <span className="text-gray-500">(à venir)</span>: la DAO gouverne la treasury (fees, paramètres, destination).
             </li>
             <li>
-              <span className="text-gray-200">green-recs-registry</span>: le “vrai” impact (certificats RECs) vit dans un
-              registry dédié; GreenVault s’y connecte.
+              <a className="text-blue-400 hover:underline" href={github.recs} target="_blank" rel="noreferrer">
+                green-recs-registry
+              </a>{" "}
+              <span className="text-gray-500">(à venir)</span>: le “vrai” impact (certificats RECs) vit dans un registry
+              dédié; GreenVault s’y connecte.
             </li>
             <li>
-              <span className="text-gray-200">grid-flex-market</span>: marché énergie (matching) que la DAO peut financer
-              et que le registry peut certifier.
+              <a className="text-blue-400 hover:underline" href={github.grid} target="_blank" rel="noreferrer">
+                grid-flex-market
+              </a>{" "}
+              <span className="text-gray-500">(à venir)</span>: marché énergie (matching) que la DAO peut financer et que le
+              registry peut certifier.
             </li>
           </ul>
+        </div>
+
+        <div className="p-4 space-y-2 card">
+          <h3 className="font-semibold">Exemple concret (illustratif)</h3>
+          <p className="text-sm text-gray-300">
+            Ex: si la treasury collecte <span className="text-gray-200">5 USDC</span> de fees sur une période, la DAO pourra
+            décider de convertir ce budget en actions “impact” (ex: retrait de certificats RECs) via le projet{" "}
+            <a className="text-blue-400 hover:underline" href={github.recs} target="_blank" rel="noreferrer">
+              green-recs-registry
+            </a>
+            . Le chiffre exact (USDC → certificats) dépendra de la logique du registry et du marché — ici on montre juste la
+            traçabilité: <span className="text-gray-200">fees → treasury → décision DAO → preuve d’impact</span>.
+          </p>
+          <p className="text-xs text-gray-500">
+            Note: GreenVault (V1) ne “mint” pas de crédits carbone; il expose la treasury et les fees, et prépare l’intégration.
+          </p>
         </div>
       </main>
       <Footer />

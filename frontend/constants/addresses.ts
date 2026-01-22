@@ -2,6 +2,10 @@ import { getAddress } from "viem";
 
 type Address = `0x${string}`;
 
+export function isSupportedChainId(chainId?: number): boolean {
+  return chainId === 11155111 || chainId === 84532;
+}
+
 function safeGetAddress(value: string | undefined): Address | undefined {
   if (!value) return undefined;
   try {

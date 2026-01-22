@@ -6,7 +6,7 @@ import { formatUnits } from "viem";
 import { DollarSign, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChainId } from "wagmi";
-import { getVaultAddress } from "@/constants/addresses";
+import { getVaultAddress, isSupportedChainId } from "@/constants/addresses";
 
 export default function TVLDisplay() {
   const chainId = useChainId();
@@ -23,8 +23,17 @@ export default function TVLDisplay() {
     },
   });
 
-  if (!contractAddress) {
+  if (!isSupportedChainId(chainId)) {
     return <p className="text-gray-400">Sélectionne un réseau supporté (Sepolia / Base Sepolia).</p>;
+  }
+  if (!contractAddress) {
+    return (
+      <p className="text-gray-400">
+        Vault non configuré pour ce réseau. Configure{" "}
+        <code className="px-1 py-0.5 bg-gray-800 rounded">NEXT_PUBLIC_VAULT_ADDRESS_SEPOLIA</code> (ou{" "}
+        <code className="px-1 py-0.5 bg-gray-800 rounded">NEXT_PUBLIC_VAULT_ADDRESS_BASE_SEPOLIA</code>).
+      </p>
+    );
   }
   if (isLoading) return <p className="text-gray-400">Chargement du TVL...</p>;
   if (error) return <p className="text-red-500">Erreur: {error.message}</p>;

@@ -2,7 +2,7 @@
 
 import { useAccount, useChainId, useReadContract } from "wagmi";
 import { contractAbi } from "@/constants";
-import { getVaultAddress } from "@/constants/addresses";
+import { getVaultAddress, isSupportedChainId } from "@/constants/addresses";
 import { formatUnits } from "viem";
 import { useEffect, useMemo, useState } from "react";
 
@@ -25,6 +25,10 @@ function txUrl(chainId: number, hash: string) {
 function formatUsdc(valueWei: bigint, decimals = 2) {
   const n = Number(formatUnits(valueWei, 6));
   return n.toFixed(decimals);
+}
+
+function shortAddr(a: `0x${string}`) {
+  return `${a.slice(0, 6)}…${a.slice(-4)}`;
 }
 
 export default function Dashboard() {
@@ -60,6 +64,13 @@ export default function Dashboard() {
     query: { enabled: Boolean(vaultAddress) },
   });
 
+  const { data: feeRecipient } = useReadContract({
+    address: vaultAddress,
+    abi: contractAbi,
+    functionName: "feeRecipient",
+    query: { enabled: Boolean(vaultAddress) },
+  });
+
   async function fetchEvents() {
     if (!vaultAddress) return;
     setIsLoadingEvents(true);
@@ -92,11 +103,38 @@ export default function Dashboard() {
     return events.filter((e) => (e.args.user ?? "").toLowerCase() === a);
   }, [events, address]);
 
-  if (!vaultAddress) {
+  const totalFeesWei = useMemo(() => {
+    // Fee for Withdrawn event = shares (gross) - usdcAmount (net)
+    let sum = BigInt(0);
+    for (const e of events) {
+      if (e.eventName !== "Withdrawn") continue;
+      const sharesGross = e.args.shares ? BigInt(e.args.shares) : undefined;
+      const usdcNet = e.args.usdcAmount ? BigInt(e.args.usdcAmount) : undefined;
+      if (sharesGross === undefined || usdcNet === undefined) continue;
+      if (sharesGross > usdcNet) sum += sharesGross - usdcNet;
+    }
+    return sum;
+  }, [events]);
+
+  if (!isSupportedChainId(chainId)) {
     return (
       <div className="space-y-2">
         <h2 className="text-xl font-semibold">Dashboard</h2>
         <p className="text-gray-400">Réseau non supporté. Passe sur Sepolia (ou Base Sepolia).</p>
+      </div>
+    );
+  }
+
+  if (!vaultAddress) {
+    return (
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold">Dashboard</h2>
+        <p className="text-gray-400">
+          Vault non configuré pour ce réseau. Sur Vercel, ajoute{" "}
+          <code className="px-1 py-0.5 bg-gray-800 rounded">NEXT_PUBLIC_VAULT_ADDRESS_SEPOLIA</code> (ou{" "}
+          <code className="px-1 py-0.5 bg-gray-800 rounded">NEXT_PUBLIC_VAULT_ADDRESS_BASE_SEPOLIA</code>) puis redeploie.
+        </p>
+        <p className="text-xs text-gray-500">chainId détecté: {chainId}</p>
       </div>
     );
   }
@@ -107,7 +145,7 @@ export default function Dashboard() {
         <div>
           <h2 className="text-2xl font-semibold">Dashboard</h2>
           <p className="text-sm text-gray-400">
-            Vault: {vaultAddress.slice(0, 6)}…{vaultAddress.slice(-4)} (chain {chainId})
+            Vault: {shortAddr(vaultAddress)} (chain {chainId})
           </p>
         </div>
       </div>
@@ -128,6 +166,38 @@ export default function Dashboard() {
           </p>
           {!address && <p className="mt-1 text-sm text-gray-400">Connecte ton wallet pour voir ta position.</p>}
         </div>
+      </div>
+
+      <div className="p-4 card">
+        <h3 className="mb-2 font-semibold">Impact (MVP)</h3>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div>
+            <p className="text-sm text-gray-400">Treasury (fee recipient)</p>
+            <p className="text-sm">
+              {feeRecipient ? (
+                <span className="text-gray-200">{shortAddr(feeRecipient as `0x${string}`)}</span>
+              ) : (
+                <span className="text-gray-500">—</span>
+              )}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-400">Fees cumulés (sur la fenêtre scannée)</p>
+            <p className="text-sm text-gray-200">
+              {formatUsdc(totalFeesWei, 4)} <span className="text-gray-400">USDC</span>
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-400">Intégrations prévues</p>
+            <p className="text-sm text-gray-200">
+              DAO (gouvernance treasury) • RECs registry (impact)
+            </p>
+          </div>
+        </div>
+        <p className="mt-3 text-xs text-gray-500">
+          Note: “fees cumulés” = somme de <span className="text-gray-400">shares - usdcAmount</span> sur les events{" "}
+          <span className="text-gray-400">Withdrawn</span> trouvés dans la plage scannée.
+        </p>
       </div>
 
       <div className="p-4 card">

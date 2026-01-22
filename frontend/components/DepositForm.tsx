@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useAccount } from "wagmi";
 import { formatUnits, parseUnits } from "viem";
 import { useChainId } from "wagmi";
-import { getVaultAddress } from "@/constants/addresses";
+import { getVaultAddress, isSupportedChainId } from "@/constants/addresses";
 
 // ABI minimal pour approve et allowance
 const erc20Abi = [
@@ -153,9 +153,15 @@ export default function DepositForm() {
 
   return (
     <div className="space-y-4">
-      {!contractAddress && (
+      {!isSupportedChainId(chainId) ? (
         <p className="text-sm text-gray-400">Sélectionne un réseau supporté (Sepolia / Base Sepolia).</p>
-      )}
+      ) : !contractAddress ? (
+        <p className="text-sm text-gray-400">
+          Vault non configuré pour ce réseau. Configure{" "}
+          <code className="px-1 py-0.5 bg-gray-800 rounded">NEXT_PUBLIC_VAULT_ADDRESS_SEPOLIA</code> (ou{" "}
+          <code className="px-1 py-0.5 bg-gray-800 rounded">NEXT_PUBLIC_VAULT_ADDRESS_BASE_SEPOLIA</code>).
+        </p>
+      ) : null}
       <Input
         type="number"
         placeholder="Montant en USDC"

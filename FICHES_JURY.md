@@ -1,8 +1,8 @@
-# 🎯 FICHE MÉMO - EverVault MVP
+# 🎯 FICHE MÉMO - GreenVault MVP (V1)
 
 ## 📝 PITCH (30 secondes)
 
-> "EverVault est un **vault DeFi** qui permet aux utilisateurs de déposer des USDC et de recevoir des parts (evUSDC) en retour. C'est un MVP qui pose les bases d'un futur vault multi-actifs avec génération de rendement."
+> "GreenVault est un **vault DeFi** qui permet aux utilisateurs de déposer des USDC et de recevoir des parts (**gvUSDC**) en retour. C'est un MVP qui pose les bases d'un futur vault multi-actifs avec génération de rendement."
 
 ---
 
@@ -11,7 +11,7 @@
 | Besoin | Solution |
 |--------|----------|
 | Stocker des stablecoins de façon sécurisée | Vault avec smart contract auditable |
-| Suivre la part de chaque utilisateur | Token ERC20 (evUSDC) représentant les parts |
+| Suivre la part de chaque utilisateur | Token ERC20 (**gvUSDC**) représentant les parts |
 | Modèle économique simple | Frais de retrait de 0.5% |
 | Interface utilisateur intuitive | Frontend Next.js avec connexion wallet |
 | Testabilité sur environnement réel | Déploiement sur Sepolia testnet |
@@ -31,10 +31,10 @@
        │ deposit()                      │ transferFrom()
        ▼                                ▼
 ┌─────────────────────────────────────────────────┐
-│              EverVault Contract                 │
+│             GreenVault Contract (MVP)           │
 │  ┌─────────────────────────────────────────┐   │
-│  │  deposit() → mint evUSDC + update TVL   │   │
-│  │  withdraw() → burn evUSDC - 0.5% fee    │   │
+│  │  deposit() → mint gvUSDC + update TVL   │   │
+│  │  withdraw() → burn gvUSDC - 0.5% fee    │   │
 │  └─────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────┘
 ```
@@ -46,31 +46,31 @@
 | Concept | Explication simple |
 |---------|-------------------|
 | **TVL** | Total Value Locked = tous les USDC dans le coffre |
-| **Parts (evUSDC)** | Token reçu quand tu déposes, représente ta part du vault |
+| **Parts (gvUSDC)** | Token reçu quand tu déposes, représente ta part du vault |
 | **Approve/Deposit** | 2 étapes : autoriser puis transférer (standard ERC20) |
 
 ---
 
 ## 🪙 JUSTIFICATION DU TOKEN (ERC20 Fongible)
 
-### Pourquoi un token ERC20 fongible (evUSDC) ?
+### Pourquoi un token ERC20 fongible (gvUSDC) ?
 
 | Critère | ERC20 (Fongible) ✅ | ERC721 (NFT) ❌ |
 |---------|---------------------|-----------------|
 | **Divisibilité** | Oui, on peut déposer 10.5 USDC | Non, NFT = unités entières |
-| **Interchangeabilité** | 1 evUSDC = 1 evUSDC (même valeur) | Chaque NFT est unique |
+| **Interchangeabilité** | 1 gvUSDC = 1 gvUSDC (même valeur) | Chaque NFT est unique |
 | **Liquidité** | Facilement échangeable sur DEX | Moins liquide |
 | **Cas d'usage DeFi** | Standard pour les vaults (Aave, Compound) | Utilisé pour art/collectibles |
 
 ### À dire au jury :
-> *"J'ai choisi un token ERC20 fongible car dans un vault DeFi, toutes les parts ont la même valeur. 1 evUSDC représente toujours la même fraction du vault, peu importe qui le détient. C'est le standard utilisé par tous les protocoles DeFi majeurs comme Aave (aTokens) ou Yearn (yTokens)."*
+> *"J'ai choisi un token ERC20 fongible car dans un vault DeFi, toutes les parts ont la même valeur. 1 gvUSDC représente toujours la même fraction du vault, peu importe qui le détient. C'est le standard utilisé par tous les protocoles DeFi majeurs comme Aave (aTokens) ou Yearn (yTokens)."*
 
-### Le token evUSDC :
-- **Nom :** EverVault Shares
-- **Symbole :** evUSDC
-- **Ratio :** 1:1 avec USDC (1 evUSDC = 1 USDC déposé)
-- **Mintage :** À chaque dépôt, l'utilisateur reçoit des evUSDC
-- **Burn :** Au retrait, les evUSDC sont brûlés
+### Le token gvUSDC :
+- **Nom :** GreenVault Shares
+- **Symbole :** gvUSDC
+- **Ratio :** 1:1 avec USDC (1 gvUSDC = 1 USDC déposé)
+- **Mintage :** À chaque dépôt, l'utilisateur reçoit des gvUSDC
+- **Burn :** Au retrait, les gvUSDC sont brûlés
 
 ---
 
@@ -91,7 +91,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";         // Admin
 1. Vérifie que montant > 0
 2. Transfère USDC du user vers le contrat
 3. Met à jour le TVL
-4. Mint des parts evUSDC (ratio 1:1)
+4. Mint des parts gvUSDC (ratio 1:1)
 ```
 
 **withdraw() :**
@@ -117,7 +117,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";         // Admin
 ```solidity
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract EverVaultSimple is ERC20, ReentrancyGuard {
+contract GreenVaultSimple is ERC20, ReentrancyGuard {
     function withdraw(uint256 shares) external nonReentrant { // ← Bloque la réentrance
         // ...
     }
@@ -183,7 +183,7 @@ git log --oneline
 2cbc45c Fix footer - fixed at bottom of viewport
 79fc2e3 Downgrade to Next.js 14 for Vercel compatibility
 21da4e5 Add comprehensive README
-3a60d99 Initial commit - EverVault MVP
+3a60d99 Initial commit - GreenVault MVP
 ```
 
 ### Bonnes pratiques appliquées :
@@ -206,10 +206,10 @@ git checkout <hash> # Revenir à une version
 
 ## 🧪 TESTS UNITAIRES
 
-### Fichier de test : `backend/test/EverVault.test.ts`
+### Fichier de test : `backend/test/GreenVaultSimple.test.ts`
 
 ```typescript
-describe("EverVault", function () {
+describe("GreenVaultSimple", function () {
   it("Should deploy successfully", async function () {
     // Vérifie que le contrat se déploie correctement
   });
@@ -258,23 +258,27 @@ frontend/
 │   ├── TVLDisplay.tsx    # Affichage du TVL
 │   └── Header.tsx        # Connexion wallet
 └── constants/
-    └── index.ts          # ABI + adresse du contrat
+    ├── addresses.ts      # Adresse du contrat (via env)
+    └── index.ts          # ABI (si besoin)
 ```
 
 ### Comment le front interagit avec le contrat :
 
 **1. Connexion au contrat (wagmi + viem) :**
 ```typescript
-// constants/index.ts
-export const contractAddress = "0x58E3cf7e9FD485CD5f36c5e330a4eCb178bA1B03";
-export const contractAbi = [...]; // ABI généré par Hardhat
+// constants/addresses.ts
+// Configure via env (Vercel/.env.local):
+// - NEXT_PUBLIC_VAULT_ADDRESS_SEPOLIA
+export function getVaultAddress(chainId?: number) {
+  // ...
+}
 ```
 
 **2. Lecture du TVL (useReadContract) :**
 ```typescript
 // TVLDisplay.tsx
 const { data: tvl } = useReadContract({
-  address: contractAddress,
+  address: vaultAddress,
   abi: contractAbi,
   functionName: "totalValueLocked",
 });
@@ -290,12 +294,12 @@ writeContract({
   address: USDC_ADDRESS,
   abi: erc20Abi,
   functionName: "approve",
-  args: [contractAddress, amountInWei],
+  args: [vaultAddress, amountInWei],
 });
 
 // Étape 2: Deposit
 writeContract({
-  address: contractAddress,
+  address: vaultAddress,
   abi: contractAbi,
   functionName: "deposit",
   args: [amountInWei],
@@ -332,9 +336,9 @@ npx hardhat run scripts/deploy_MVP.ts --network sepolia
 ### Script de déploiement (`deploy_MVP.ts`) :
 ```typescript
 const USDC_ADDRESS = "0x1c7d4b196cb0c7b01d743fbc6116a902379c7238";
-const EverVaultSimple = await ethers.getContractFactory("EverVaultSimple");
-const vault = await EverVaultSimple.deploy(USDC_ADDRESS);
-console.log("✅ EverVaultSimple déployé à:", await vault.getAddress());
+const GreenVaultSimple = await ethers.getContractFactory("GreenVaultSimple");
+const vault = await GreenVaultSimple.deploy(USDC_ADDRESS);
+console.log("✅ GreenVaultSimple déployé à:", await vault.getAddress());
 ```
 
 ### Vérification sur Etherscan :
@@ -348,7 +352,7 @@ npx hardhat verify --network sepolia <CONTRACT_ADDRESS> <USDC_ADDRESS>
 
 | Quoi | Adresse |
 |------|---------|
-| Contrat EverVault | `0x58E3cf7e9FD485CD5f36c5e330a4eCb178bA1B03` |
+| Contrat GreenVault (MVP) | `0x58E3cf7e9FD485CD5f36c5e330a4eCb178bA1B03` |
 | USDC Sepolia | `0x1c7D4B196Cb0C7b01d743Fbc6116a902379C7238` |
 
 ---
@@ -368,7 +372,7 @@ npx hardhat verify --network sepolia <CONTRACT_ADDRESS> <USDC_ADDRESS>
 > *"USDC est un stablecoin, sa valeur est stable. Ça simplifie les calculs et c'est plus adapté pour un vault DeFi où on veut éviter la volatilité."*
 
 ### Q5 : "C'est quoi la différence avec ton contrat de base EverVault.sol ?"
-> *"EverVault.sol était prévu pour intégrer Aave et générer du yield. Le MVP est simplifié car Aave sur Sepolia utilise des tokens de test différents. En V2 sur mainnet, j'intégrerais Aave."*
+> *"EverVault.sol était prévu pour intégrer Aave et générer du yield. Le MVP `GreenVaultSimple` est simplifié (USDC-only, 1:1, pas de stratégie) car Aave sur Sepolia utilise des tokens de test différents. En V2, j'intégrerais Aave sur un réseau supporté."*
 
 ### Q6 : "Comment tu génères du rendement ?"
 > *"Dans ce MVP, il n'y a pas de yield. En V2, les USDC seraient déposés sur Aave ou Compound pour générer des intérêts automatiquement."*

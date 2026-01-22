@@ -135,6 +135,19 @@ Puis mets l’adresse affichée dans le front (`NEXT_PUBLIC_VAULT_ADDRESS_SEPOLI
 
 ---
 
+## 🔗 Integration roadmap (avec les autres projets)
+
+L’idée: éviter les doublons et construire une histoire cohérente “Green DeFi”.
+
+- **GreenVault (ce repo)**: Vault USDC + UI + events + “treasury” (destinataire des fees).
+- **energy-governance-dao**: la DAO prend le contrôle de la **treasury** (governance des paramètres, destination des fees).
+- **green-recs-registry**: les actions “impact” (RECs / certificats) vivent dans un registry dédié; GreenVault ne refait pas un système carbone, il s’y connecte.
+- **grid-flex-market**: marché énergie (time-slots / matching) pouvant produire des métriques/flux que la DAO finance et que le registry certifie.
+
+Dans le Dashboard, on expose déjà la **treasury (feeRecipient)** et une estimation des **fees cumulés** sur la plage d’events scannée: c’est le “hook” qui permettra de brancher DAO + Impact registry.
+
+---
+
 ## 📄 Licence
 
 MIT License - Voir [LICENSE](LICENSE)
